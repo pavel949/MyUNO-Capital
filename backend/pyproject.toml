@@ -3,6 +3,36 @@ name = "myuno-capital-backend"
 version = "0.1.0"
 description = "MyUNO Capital — Autonomous AI OS backend (FastAPI + Celery)"
 requires-python = ">=3.12"
+# Runtime dependencies. Kept in sync with requirements.txt. Vercel's Python
+# builder (uv) installs from this list, so the API's deps must live here too —
+# requirements.txt alone is ignored when a [project] table exists.
+dependencies = [
+    "fastapi==0.115.6",
+    "uvicorn[standard]==0.34.0",
+    "pydantic[email]==2.10.4",
+    "pydantic-settings==2.7.0",
+    "email-validator==2.2.0",
+    "SQLAlchemy==2.0.36",
+    "psycopg[binary]==3.2.3",
+    "alembic==1.14.0",
+    "pgvector==0.3.6",
+    "celery==5.4.0",
+    "redis==5.2.1",
+    "PyJWT==2.10.1",
+    "bcrypt==4.2.1",
+    "anthropic==0.42.0",
+    "python-multipart==0.0.20",
+    "httpx==0.28.1",
+]
+
+[project.optional-dependencies]
+dev = ["pytest==8.3.4"]
+
+# Treat this as a non-package project: uv installs the dependencies above but
+# does not try to build/install the app itself (no build backend needed). The
+# app code is imported from the filesystem by the Vercel entrypoint.
+[tool.uv]
+package = false
 
 [tool.black]
 line-length = 100
