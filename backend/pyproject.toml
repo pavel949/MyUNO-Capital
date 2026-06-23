@@ -1,0 +1,29 @@
+[project]
+name = "myuno-capital-backend"
+version = "0.1.0"
+description = "MyUNO Capital — Autonomous AI OS backend (FastAPI + Celery)"
+requires-python = ">=3.12"
+
+[tool.black]
+line-length = 100
+target-version = ["py312"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W", "UP", "B"]
+ignore = ["B008"]  # FastAPI Depends() in defaults is idiomatic
+
+[tool.ruff.lint.per-file-ignores]
+"alembic/*" = ["E501"]
+"app/models/__init__.py" = ["F401"]
+# Data-heavy modules with long human-readable agent descriptions / comments.
+"app/agents/registry.py" = ["E501"]
+"app/scripts/seed.py" = ["E501"]
+"tests/conftest.py" = ["E501"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
