@@ -38,6 +38,10 @@ class Settings(BaseSettings):
     database_url: str = (
         "postgresql+psycopg://myuno:change-me-postgres-password@localhost:5432/myuno_capital"
     )
+    # Postgres schema the app's tables live in. Use a dedicated schema (e.g.
+    # "myuno_capital") when sharing a database instance with other products;
+    # "public" keeps the default behaviour for standalone deployments.
+    db_schema: str = "public"
 
     # --- Redis / Celery ----------------------------------------------------
     redis_url: str = "redis://localhost:6379/0"
