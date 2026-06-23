@@ -1,8 +1,0 @@
-# Only the Next.js frontend is deployed to Vercel.
-# The FastAPI backend (Postgres/Redis/Celery/MinIO) is hosted elsewhere.
-backend/
-docs/
-*.md
-docker-compose.yml
-Makefile
-.env.example
