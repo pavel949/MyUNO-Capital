@@ -1,0 +1,126 @@
+# =============================================================================
+# MyUNO Capital — Render Blueprint (backend)
+# -----------------------------------------------------------------------------
+# Deploys the FastAPI API + Celery worker with managed PostgreSQL (pgvector)
+# and Redis. The Next.js frontend is deployed separately on Vercel (see
+# vercel.json + docs/deploy.md).
+#
+# To use:
+#   1. Push this repo to GitHub (done).
+#   2. In Render: New > Blueprint > pick this repo > Apply.
+#   3. After the API is live, copy its URL (https://myuno-backend.onrender.com)
+#      into the Vercel env var NEXT_PUBLIC_API_URL, and set CORS_ORIGINS here
+#      to your Vercel domain (e.g. https://myuno-capital.vercel.app).
+#
+# Spec: https://render.com/docs/blueprint-spec
+# Note: Render renamed "Redis" to "Key Value"; the blueprint type stays `redis`.
+# Free Postgres/Redis plans have storage/uptime limits — use paid plans for prod.
+# =============================================================================
+
+databases:
+  - name: myuno-postgres
+    databaseName: myuno_capital
+    user: myuno
+    postgresMajorVersion: "16"
+    plan: free
+
+services:
+  # --- Redis (Celery broker/result backend + cache) -------------------------
+  - type: redis
+    name: myuno-redis
+    plan: free
+    ipAllowList: [] # internal only — reachable from Render services
+    maxmemoryPolicy: noeviction
+
+  # --- FastAPI API ----------------------------------------------------------
+  - type: web
+    name: myuno-backend
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    plan: starter
+    region: oregon
+    healthCheckPath: /healthz
+    autoDeploy: true
+    # Honor Render's injected $PORT; run migrations before each deploy.
+    dockerCommand: sh -c "uvicorn app.main:app --host 0.0.0.0 --port $PORT"
+    preDeployCommand: alembic upgrade head
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: myuno-postgres
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: myuno-redis
+          property: connectionString
+      - key: CELERY_BROKER_URL
+        fromService:
+          type: redis
+          name: myuno-redis
+          property: connectionString
+      - key: CELERY_RESULT_BACKEND
+        fromService:
+          type: redis
+          name: myuno-redis
+          property: connectionString
+      - key: SECRET_KEY
+        generateValue: true
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRE_MINUTES
+        value: "60"
+      - key: JWT_ALGORITHM
+        value: HS256
+      # Set to your Vercel domain after the frontend is deployed.
+      - key: CORS_ORIGINS
+        sync: false
+      # Optional: without a real key the LLM layer uses the deterministic stub.
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: DEFAULT_LLM_MODEL
+        value: claude-opus-4-8
+      - key: LLM_FALLBACK_MODEL
+        value: claude-haiku-4-5
+
+  # --- Celery worker (shares the backend image) -----------------------------
+  - type: worker
+    name: myuno-worker
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    plan: starter
+    region: oregon
+    autoDeploy: true
+    dockerCommand: celery -A app.worker worker --loglevel=info --concurrency=4
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: myuno-postgres
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: myuno-redis
+          property: connectionString
+      - key: CELERY_BROKER_URL
+        fromService:
+          type: redis
+          name: myuno-redis
+          property: connectionString
+      - key: CELERY_RESULT_BACKEND
+        fromService:
+          type: redis
+          name: myuno-redis
+          property: connectionString
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: DEFAULT_LLM_MODEL
+        value: claude-opus-4-8
+      - key: LLM_FALLBACK_MODEL
+        value: claude-haiku-4-5

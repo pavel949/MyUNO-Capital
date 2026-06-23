@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from functools import lru_cache
 
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # Placeholder API-key fragments from `.env.example`. If the configured key matches
@@ -61,6 +62,24 @@ class Settings(BaseSettings):
     jwt_algorithm: str = "HS256"
     # Refresh-token lifetime (days). Not in .env.example; sensible default.
     jwt_refresh_expire_days: int = 30
+
+    @field_validator("database_url", mode="before")
+    @classmethod
+    def _normalize_database_url(cls, value: str) -> str:
+        """Normalize managed-host DB URLs to the psycopg async/sync driver.
+
+        Platforms like Render, Railway, and Heroku inject ``DATABASE_URL`` as
+        ``postgres://...`` (or ``postgresql://...``). SQLAlchemy + psycopg3
+        expects the explicit ``postgresql+psycopg://`` scheme, so rewrite it
+        while leaving an already-qualified URL untouched.
+        """
+        if not isinstance(value, str):
+            return value
+        if value.startswith("postgres://"):
+            return "postgresql+psycopg://" + value[len("postgres://") :]
+        if value.startswith("postgresql://"):
+            return "postgresql+psycopg://" + value[len("postgresql://") :]
+        return value
 
     # --- Derived helpers ---------------------------------------------------
     @property

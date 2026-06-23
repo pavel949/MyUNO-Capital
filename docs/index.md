@@ -18,6 +18,7 @@ This is the documentation home. Each document below covers one area of the platf
 | [Data Model](data-model.md) | Core entities (tenants, companies, options, decisions, agents, activity log) and the memory & data layer. |
 | [API Reference](api-reference.md) | REST API endpoints, authentication, conventions, and examples. |
 | [Integrations](integrations.md) | Supported third-party integrations and connectors (GitHub, Stripe, ads, email, support, analytics, and more). |
+| [Cloud Deploy](deploy.md) | Hosted quickstart: frontend on Vercel + backend on Render (or Railway/Fly), and how to wire them together. |
 | [Deployment](deployment.md) | Production deployment with Docker and Kubernetes, plus CI/CD via GitHub Actions. |
 | [Security & Compliance](security-compliance.md) | Security practices, RBAC, tenant isolation, privacy, data handling, and the compliance roadmap. |
 | [Roadmap](roadmap.md) | The stage map (idea → exit), milestones, and planned capabilities. |
