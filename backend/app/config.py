@@ -32,7 +32,13 @@ class Settings(BaseSettings):
     app_env: str = "local"
     secret_key: str = "change-me-please-generate-a-long-random-string"
     backend_port: int = 8000
-    cors_origins: str = "http://localhost:3000"
+    # Default allows local dev plus the deployed Founder Console origins. Override
+    # via the CORS_ORIGINS env var (comma-separated) for other domains.
+    cors_origins: str = (
+        "http://localhost:3000,"
+        "https://my-uno-capital.vercel.app,"
+        "https://my-uno-capital-pavel949s-projects.vercel.app"
+    )
 
     # --- Database ----------------------------------------------------------
     database_url: str = (
